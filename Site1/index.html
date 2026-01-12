@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Портфолио — Иван Иванов</title>
+
+<style>
+/* ===== Mobile First ===== */
+:root {
+  --bg: #0f172a;
+  --card: #111827;
+  --accent: #38bdf8;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(180deg, #020617, var(--bg));
+  color: var(--text);
+}
+
+header {
+  padding: 32px 16px;
+  text-align: center;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+header p {
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.container {
+  padding: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.section {
+  background: var(--card);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+
+.section h2 {
+  margin-top: 0;
+  color: var(--accent);
+  font-size: 20px;
+}
+
+.list {
+  padding-left: 18px;
+}
+
+.list li {
+  margin-bottom: 6px;
+}
+
+/* Skills */
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.skill {
+  background: rgba(56,189,248,.15);
+  color: var(--accent);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+/* Projects */
+.project {
+  margin-bottom: 12px;
+}
+
+.project span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.project-card {
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.project-card p {
+  margin: 6px 0 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.project-link {
+  display: inline-block;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.project-link:hover {
+  text-decoration: underline;
+}
+
+
+/* Contact form */
+form {
+  display: grid;
+  gap: 10px;
+}
+
+input, textarea, button {
+  background: #020617;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 10px;
+  color: var(--text);
+}
+
+button {
+  background: var(--accent);
+  color: #020617;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+/* Footer */
+footer {
+  margin-top: 32px;
+  padding: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ===== Desktop ===== */
+@media (min-width: 768px) {
+  header h1 {
+    font-size: 36px;
+  }
+
+  .container {
+    max-width: 1000px;
+    margin: auto;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .full {
+    grid-column: 1 / -1;
+  }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Воробьева Светлана</h1>
+  <p>Web-design | JavaScript | Web-дизайн</p>
+</header>
+
+<main class="container">
+
+  <section class="section full">
+    <h2>Обо мне</h2>
+    <p>
+      Я начинающий веб-разработчик, изучаю JavaScript и современные
+      веб-технологии. Интересуюсь интерактивными интерфейсами, анимацией
+      и адаптивным дизайном.
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>Образование</h2>
+    <ul class="list">
+      <li>Университет — Санкт-Петербуржский университет промышленных технологий и дизайна</li>
+      <li>Онлайн-курсы по JavaScript и Web-разработке</li>
+    </ul>
+  </section>
+
+  <section class="section">
+    <h2>Навыки</h2>
+    <div class="skills">
+      <div class="skill">HTML</div>
+      <div class="skill">CSS</div>
+      <div class="skill">JavaScript</div>
+      <div class="skill">Responsive Design</div>
+      <div class="skill">Git</div>
+    </div>
+  </section>
+
+    <section class="section">
+    <h2>Проекты</h2>
+
+    <div class="project-card">
+        <strong>🎨 Color Cannon Game</strong>
+        <p>Аркадная игра на JavaScript с использованием Canvas</p>
+        <a href="https://tasamaya2025.github.io/Web-design/Site3/index.html" target="_blank" class="project-link" style="padding-bottom: 24px;">
+        Открыть проект →
+        </a>
+    </div>
+
+    <div class="project-card">
+        <strong>🌍 NASA NEO Dashboard</strong>
+        <p>Интерактивный дашборд с визуализацией данных NASA API</p>
+        <a href="https://tasamaya2025.github.io/Web-design/Site2/index.html" target="_blank" class="project-link" style="padding-bottom: 24px;">
+        Открыть проект →
+        </a>
+    </div>
+    </section>
+
+
+  <section class="section">
+  <h2>Цели и интересы</h2>
+  <p>
+    Интересуюсь веб-разработкой, анимацией и
+    созданием интерактивных пользовательских интерфейсов.
+  </p>
+  <ul class="list">
+    <li>Развитие в JavaScript и React</li>
+    <li>Работа с API и визуализация данных</li>
+    <li>Современный UI/UX</li>
+  </ul>
+</section>
+
+  <section class="section">
+    <h2>Обратная связь</h2>
+    <form id="contactForm">
+      <input type="text" placeholder="Ваше имя" required />
+      <textarea placeholder="Сообщение" required></textarea>
+      <button type="submit">Отправить</button>
+    </form>
+    <p id="formStatus" style="margin-top:8px;"></p>
+  </section>
+
+
+  <section class="section">
+    <h2>Контакты</h2>
+    <p>Email: sveta_vorobueva@mail.com</p>
+    <p>GitHub: github.com/sveta</p>
+  </section>
+
+</main>
+
+<footer>
+  <p>Нейросеть: ChatGPT — ~15 минут</p>
+  <p>JavaScript: интерактивная форма обратной связи</p>
+</footer>
+
+<script>
+/* ===== JavaScript functionality ===== */
+const form = document.getElementById('contactForm');
+const status = document.getElementById('formStatus');
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  status.textContent = 'Сообщение отправлено!';
+  status.style.color = '#38bdf8';
+  form.reset();
+});
+</script>
+
+</body>
+</html>
