@@ -1,0 +1,315 @@
+* {
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0e0e0e;
+  color: #fff;
+}
+
+/* ================= PREVIEW ================= */
+
+.preview {
+  height: 96vh;          /* чуть меньше, чтобы были отступы */
+  padding: 40px 0;       /* отступы сверху и снизу */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cuisine-slider {
+  display: flex;
+  gap: 20px;
+  justify-content: center; /* выравнивание по центру */
+}
+
+.cuisine-card {
+  position: relative;
+  width: 300px;
+  height: 600px;
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+  background: rgba(0, 0, 0, 0.8);
+  transition: width 0.6s ease;
+}
+
+.cuisine-card img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  transition: transform 0.6s ease;
+  opacity: 0.76;
+}
+
+.cuisine-card span {
+  position: relative;
+  z-index: 1;
+  padding: 15px;
+  text-align: center;
+}
+
+
+/* ================= MENU ================= */
+
+.hidden {
+  display: none;
+}
+
+.menu {
+  padding: 0;
+}
+
+/* ================= HEADER ================= */
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: #0e0e0e;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.logo span {
+  color: #ff8c42;
+}
+
+.nav a {
+  margin: 0 12px;
+  color: #aaa;
+  text-decoration: none;
+}
+
+.nav a:hover {
+  color: #fff;
+}
+
+.cart-icon {
+  cursor: pointer;
+  font-size: 20px;
+}
+
+/* ================= HERO ================= */
+
+.hero {
+  position: relative;
+  height: 480px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  padding-left: 40px;
+  max-width: 500px;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: 42px;
+}
+
+.hero p {
+  margin-top: 10px;
+  color: #ddd;
+}
+
+/* ================= MENU TITLE ================= */
+
+.menu-title {
+  margin: 40px;
+  font-size: 28px;
+}
+
+/* ================= GRID ================= */
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 25px;
+  padding: 0 40px 60px;
+}
+
+.dish {
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 15px;
+}
+
+.dish img {
+  display: block;
+  width: 100%;
+  height: 160px;          /* ← ВАЖНО */
+  object-fit: cover;     /* ← ВАЖНО */
+  border-radius: 12px;
+}
+
+.dish h4 {
+  margin: 10px 0 5px;
+}
+
+.dish button {
+  margin-top: 10px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+
+  background: linear-gradient(135deg, #ff8c42, #ff3c38);
+  color: #fff;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* hover */
+.dish button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(255, 140, 66, 0.4);
+}
+
+/* active (нажатие) */
+.dish button:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 8px rgba(255, 60, 56, 0.5);
+}
+
+/* ================= CART PANEL ================= */
+
+.cart-panel {
+  position: fixed;
+  top: 90px;
+  right: 20px;
+  width: 280px;
+  background: #141414;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0,0,0,.5);
+  z-index: 20;
+}
+
+.cart-panel h3 {
+  margin-top: 0;
+}
+
+.cart-panel ul {
+  padding-left: 18px;
+}
+
+.order-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 15px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: bold;
+
+  background: linear-gradient(135deg, #ff425e, #ff3c38);
+  color: #fff;
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.order-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(255, 140, 66, 0.4);
+}
+
+.order-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 3px 8px rgba(255, 60, 56, 0.5);
+}
+
+.order-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.quantity-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.quantity-controls button {
+  width: 30%;
+  background: #ff8c42;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.3s;
+  padding: 5px 0;
+}
+
+.quantity-controls button:hover {
+  background: #ff3c38;
+}
+
+.quantity-controls .count {
+  width: 40%;
+  text-align: center;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+
+/* ================= SUCCESS TOAST ================= */
+
+.success-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2ecc71;
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-size: 16px;
+  z-index: 30;
+}

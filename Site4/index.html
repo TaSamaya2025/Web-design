@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>FoodHub</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<section id="preview" class="preview">
+  <h1>Выберите кухню</h1>
+  <div class="cuisine-slider">
+    <div class="cuisine-card" data-cuisine="japanese">
+      <img src="https://raw.githubusercontent.com/TaSamaya2025/Web-design/main/Site4/egupt.jpg" alt="Японская кухня" />
+      <span>Японская</span>
+    </div>
+    <div class="cuisine-card" data-cuisine="italian">
+      <img src="https://raw.githubusercontent.com/TaSamaya2025/Web-design/main/Site4/italia.jpg" alt="Итальянская кухня" />
+      <span>Итальянская</span>
+    </div>
+    <div class="cuisine-card" data-cuisine="russian">
+      <img src="https://raw.githubusercontent.com/TaSamaya2025/Web-design/main/Site4/russia.jpg" alt="Русская кухня" />
+      <span>Русская</span>
+    </div>
+    <div class="cuisine-card" data-cuisine="mexican">
+      <img src="https://raw.githubusercontent.com/TaSamaya2025/Web-design/main/Site4/mexica.jpg" alt="Мексиканская кухня" />
+      <span>Мексика</span>
+    </div>
+    <div class="cuisine-card" data-cuisine="korean">
+      <img src="https://raw.githubusercontent.com/TaSamaya2025/Web-design/main/Site4/korea.jpg" alt="Корейская кухня" />
+      <span>Корейская</span>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="menu" class="menu hidden">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="logo">Food<span>Hub</span></div>
+
+    <nav class="nav">
+      <a href="#" data-cuisine="japanese">Японская</a>
+      <a href="#" data-cuisine="italian">Итальянская</a>
+      <a href="#" data-cuisine="russian">Русская</a>
+      <a href="#" data-cuisine="mexican">Мексиканская</a>
+      <a href="#" data-cuisine="korean">Корейская</a>
+    </nav>
+
+    <div class="cart-icon" id="cart-btn">
+      🛒 <span id="cart-count">0</span>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" id="hero">
+    <div class="hero-content">
+      <h1 id="hero-title"></h1>
+      <p id="hero-text"></p>
+    </div>
+  </section>
+
+  <!-- MENU TITLE -->
+  <h2 class="menu-title">Меню</h2>
+
+  <!-- DISHES -->
+  <div class="menu-grid" id="menu-grid"></div>
+
+</section>
+
+<!-- CART PANEL -->
+<aside class="cart-panel hidden" id="cart-panel">
+  <h3>Корзина</h3>
+  <ul id="cart-items"></ul>
+  <p>Сумма: <strong><span id="total-price">0</span> ₽</strong></p>
+  <p>Время: <strong><span id="total-time">0</span> мин</strong></p>
+  <button class="order-btn">Оформить заказ</button>
+</aside>
+
+<!-- SUCCESS -->
+<div class="success-toast hidden" id="success-toast">
+  Заказ успешно принят!
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
