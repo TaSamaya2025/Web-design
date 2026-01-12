@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>Color Cannon - Вертикальный платформер с двойным прыжком</title>
+<link href="https://raw.githubusercontent.com/TaSamaya2025/Web-design/main/Site3/cosmos.jpg" rel="stylesheet">
+
+<style>
+body {
+    background:
+      linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
+      url('cosmos.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Roboto', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    margin-top: 40px;
+    color: white;
+}
+
+.game-wrapper {
+    width: 420px;
+    height: 700px;
+    background: #111;
+    border-radius: 12px;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+h1 {
+    text-align: center;
+    margin: 6px 0;
+    font-size: 24px;
+}
+
+.score {
+    text-align: center;
+    margin-bottom: 6px;
+    font-size: 14px;
+}
+
+canvas {
+    display: block;
+    margin: auto;
+    background: #000;
+    border-radius: 8px;
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+
+button {
+    width: 140px;
+    height: 36px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+}
+
+.start {
+    margin-top: 24px;
+    margin-left: 24px;
+    background: #00cc88;
+    color: white;
+}
+
+.start:hover {
+    background: #00a86b;
+}
+
+.end {
+    margin-top: 24px;
+    margin-right: 24px;
+    background: #ff4444;
+    color: white;
+}
+
+.end:hover {
+    background: #cc0000;
+}
+
+.hint {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 24px;
+    opacity: 0.7;
+}
+
+/* Плашка проигрыша */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    font-size: 22px;
+    border-radius: 12px;
+    pointer-events: none;
+    padding: 0 20px;
+    color: white;
+}
+
+/* Плашка "Игра началась" */
+.start-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 204, 136, 0.9);
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 18px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+    color: #fff;
+}
+.start-overlay.visible {
+    opacity: 1;
+}
+
+.highscores-list {
+    margin-top: 10px;
+    font-size: 16px;
+    text-align: right; 
+    max-width: 220px;
+    padding-right: 10px;
+}
+.highscores-list li {
+    margin-bottom: 4px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <h1>COLOR CANNON</h1>
+    <div class="score">Счёт: <span id="score">0</span></div>
+
+    <canvas id="game" width="380" height="500"></canvas>
+
+    <div class="controls">
+        <button class="start" onclick="startGame()">Начать</button>
+        <button id="stopBtn" class="end" onclick="stopGame()">Стоп</button>
+    </div>
+
+    <div class="hint">
+        ← → движение | ↑ прыжок (двойной прыжок) | A/D тоже подойдут
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div>Игра проиграна</div>
+        <div style="margin-top:10px;font-size:16px;">
+            Ваш счёт: <span id="finalScore"></span>
+        </div>
+        <div style="margin-top:10px; font-weight:bold; font-size:18px;">Рекорды:</div>
+        <ol class="highscores-list" id="highScoresList"></ol>
+    </div>
+
+    <div class="start-overlay" id="startOverlay">Игра началась</div>
+</div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+const GRAVITY = 0.7;
+const PLAYER_SPEED = 4;
+const JUMP_FORCE = 15;
+const PLATFORM_WIDTH = 90;
+const PLATFORM_HEIGHT = 15;
+const ENEMY_SIZE = 30;
+const SCROLL_SPEED = 1.2; // скорость прокрутки вниз
+let gameSpeed = 1;
+let running = false;
+let isGameOver = false;
+let score = 0;
+const stopBtn = document.getElementById('stopBtn');
+const scoreEl = document.getElementById('score');
+const overlay = document.getElementById('overlay');
+const finalScore = document.getElementById('finalScore');
+const highScoresList = document.getElementById('highScoresList');
+const startOverlay = document.getElementById('startOverlay');
+const playerImage = new Image();
+playerImage.src = 'https://raw.githubusercontent.com/TaSamaya2025/Web-design/main/Site3/player.png'; // путь к картинке
+let firstJumpDone = false; // для начала прокрутки
+
+const enemyImage = new Image();
+enemyImage.src = 'https://raw.githubusercontent.com/TaSamaya2025/Web-design/main/Site3/cometa.png';
+
+class Player {
+  constructor(x, y) {
+    this.width = 30;
+    this.height = 50;
+    this.x = x;
+    this.y = y;
+    this.vx = 0;
+    this.vy = 0;
+    this.color = 'lime';
+    this.isOnGround = false;
+    this.jumpCount = 0; // для двойного прыжка
+  }
+
+    update(input, platforms) {
+    // Движение влево-вправо
+    if (input.left) this.vx = -PLAYER_SPEED;
+    else if (input.right) this.vx = PLAYER_SPEED;
+    else this.vx = 0;
+
+    // Прыжок (двойной)
+    if (input.jump && this.jumpCount < 2) {
+        this.vy = -JUMP_FORCE;
+        this.jumpCount++;
+        input.jump = false; // чтобы прыжок срабатывал при нажатии, а не удержании
+        firstJumpDone = true;
+    }
+
+    // Сначала движение по X
+    this.x += this.vx;
+
+    // Сначала двигаем по Y с текущей скоростью
+    this.y += this.vy;
+
+    // Сбрасываем приземление — будем проверять заново
+    this.isOnGround = false;
+
+    // Проверяем платформы для приземления
+    for (const platform of platforms) {
+        if (this.x < platform.x + platform.width &&
+            this.x + this.width > platform.x) {
+        const playerBottom = this.y + this.height;
+        const platformTop = platform.y;
+
+        if (this.vy >= 0 &&
+            playerBottom > platformTop &&
+            playerBottom - this.vy <= platformTop) {
+            this.y = platformTop - this.height;
+            this.vy = 0;          // Останавливаем падение
+            this.isOnGround = true;
+            this.jumpCount = 0;
+            break; // Успешно приземлились — выходим из цикла
+        }
+        }
+    }
+
+    // Если не на земле — прибавляем гравитацию (только после проверки приземления!)
+    if (!this.isOnGround) {
+        this.vy += GRAVITY;
+    }
+
+    // Ограничения по горизонтали
+    if (this.x < 0) this.x = 0;
+    if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+
+    // Если упал ниже канвы — конец игры
+    if (this.y > canvas.height) {
+        gameOver();
+    }
+    }
+
+  draw(ctx) {
+    ctx.drawImage(
+      playerImage,
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    );
+  }
+}
+
+class Platform {
+  constructor(x, y) {
+    this.width = PLATFORM_WIDTH;
+    this.height = PLATFORM_HEIGHT;
+    this.x = x;
+    this.y = y;
+    this.color = '#444';
+  }
+
+  update() {
+    this.y += SCROLL_SPEED;
+  }
+
+  draw(ctx) {
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, this.width, this.height);
+  }
+}
+
+class Enemy {
+  constructor(x, y) {
+    this.size = ENEMY_SIZE;
+    this.x = x;
+    this.y = y;
+    this.color = 'red';
+  }
+
+  update() {
+    this.y += SCROLL_SPEED * 1.2;
+  }
+
+  draw(ctx) {
+    ctx.drawImage(
+      enemyImage,
+      this.x,
+      this.y,
+      this.size,
+      this.size
+    );
+  }
+}
+
+class InputHandler {
+  constructor() {
+    this.left = false;
+    this.right = false;
+    this.jump = false;
+
+    window.addEventListener('keydown', e => {
+      if (!running) return;
+
+      if (e.code === 'ArrowLeft' || e.key.toLowerCase() === 'a') this.left = true;
+      if (e.code === 'ArrowRight' || e.key.toLowerCase() === 'd') this.right = true;
+      if (e.code === 'ArrowUp' || e.key.toLowerCase() === 'w') this.jump = true;
+    });
+
+    window.addEventListener('keyup', e => {
+      if (!running) return;
+
+      if (e.code === 'ArrowLeft' || e.key.toLowerCase() === 'a') this.left = false;
+      if (e.code === 'ArrowRight' || e.key.toLowerCase() === 'd') this.right = false;
+      if (e.code === 'ArrowUp' || e.key.toLowerCase() === 'w') this.jump = false;
+    });
+  }
+}
+
+const input = new InputHandler();
+let player;
+let platforms = [];
+let enemies = [];
+
+let platformSpawnTimer = 0;
+let enemySpawnTimer = 0;
+
+function initLevel() {
+  platforms = [];
+  enemies = [];
+  platforms.push(new Platform(50, 480));
+  platforms.push(new Platform(150, 400));
+  platforms.push(new Platform(250, 330));
+  platforms.push(new Platform(100, 270));
+  platforms.push(new Platform(200, 220));
+  platforms.push(new Platform(150, 160));
+}
+
+function spawnPlatform() {
+  const x = Math.random() * (canvas.width - PLATFORM_WIDTH);
+  const y = -(PLATFORM_HEIGHT / 2 + Math.random() * 10);
+  platforms.push(new Platform(x, y));
+}
+
+function spawnEnemy() {
+  const x = Math.random() * (canvas.width - ENEMY_SIZE);
+  const y = -(ENEMY_SIZE / 2 + Math.random() * 40);
+  enemies.push(new Enemy(x, y));
+}
+
+function update() {
+  if (!running) return;
+
+  // Постепенное ускорение игры
+  gameSpeed += 0.001;
+
+  player.update(input, platforms);
+
+  if (player.y < 0) {
+    player.y = 0;  // Ограничение верхней границы
+    player.vy = 0; // Чтобы не "залипал" на верхушке
+  }
+
+  if (firstJumpDone) {
+    platforms.forEach(p => p.y += SCROLL_SPEED * gameSpeed);
+    platforms = platforms.filter(p => p.y < canvas.height);
+
+    enemies.forEach(e => e.y += SCROLL_SPEED * 1.2 * gameSpeed);
+    enemies = enemies.filter(e => e.y < canvas.height);
+
+    platformSpawnTimer += gameSpeed;
+    enemySpawnTimer += gameSpeed;
+
+    if (platformSpawnTimer > 90) {
+      spawnPlatform();
+      platformSpawnTimer = 0;
+    }
+    if (enemySpawnTimer > 150) {
+      spawnEnemy();
+      enemySpawnTimer = 0;
+    }
+  }
+
+  // Проверка столкновений
+  for (const enemy of enemies) {
+    if (player.x < enemy.x + enemy.size &&
+        player.x + player.width > enemy.x &&
+        player.y < enemy.y + enemy.size &&
+        player.y + player.height > enemy.y) {
+      gameOver();
+    }
+  }
+
+  if (firstJumpDone) {
+    score += 0.02 * gameSpeed;
+    scoreEl.textContent = Math.floor(score);
+    }
+
+}
+
+function startGame() {
+  score = 0;
+  scoreEl.textContent = score;
+
+  initLevel();
+
+  player = new Player(platforms[0].x, platforms[0].y - 50);
+  player.isOnGround = true;
+  player.jumpCount = 0;
+
+  isGameOver = false;
+  overlay.style.display = 'none';
+
+  running = true;
+
+  firstJumpDone = false;
+
+  platformSpawnTimer = 0;
+  enemySpawnTimer = 0;
+
+  gameSpeed = 1; // сброс скорости при старте игры
+
+  showStartOverlay();
+
+  gameLoop();
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  player.draw(ctx);
+  platforms.forEach(p => p.draw(ctx));
+  enemies.forEach(e => e.draw(ctx));
+}
+
+function gameLoop() {
+  update();
+  draw();
+  if (running) requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+  score = 0;
+  scoreEl.textContent = score;
+  stopBtn.textContent = 'Стоп';
+  canvas.style.display = 'block';
+
+  initLevel();
+
+  player = new Player(platforms[0].x, platforms[0].y - 50);
+  player.isOnGround = true;
+  player.jumpCount = 0;
+  player.vx = 0;
+  player.vy = 0;
+
+  // Сбросим ввод
+  input.left = false;
+  input.right = false;
+  input.jump = false;
+
+  isGameOver = false;
+  overlay.style.display = 'none';
+
+  running = true;
+
+  firstJumpDone = false;
+
+  showStartOverlay();
+
+  platformSpawnTimer = 0;
+  enemySpawnTimer = 0;
+
+  gameLoop();
+}
+
+
+function stopGame() {
+  if (stopBtn.textContent === 'Стоп') {
+    // Первый клик — остановить игру и затемнить экран
+    running = false;
+
+    input.left = false;
+    input.right = false;
+    input.jump = false;
+
+    if (player) {
+      player.vx = 0;
+      player.vy = 0;
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Меняем текст кнопки на "Закончить"
+    stopBtn.textContent = 'Закончить';
+
+  } else if (stopBtn.textContent === 'Закончить') {
+    // Второй клик — убрать содержимое игры, оставить кнопку
+
+    // Можно скрыть сам canvas и игровые элементы
+    canvas.style.display = 'none';
+
+    // Если есть другие игровые элементы, например score, их тоже можно скрыть
+    // document.querySelector('.score').style.display = 'none';
+
+    // Кнопка остаётся, текст — "Закончить"
+  }
+}
+
+function gameOver() {
+  if (isGameOver) return;
+  isGameOver = true;
+
+  stopGame();
+
+  finalScore.textContent = Math.floor(score);
+  saveHighScore(Math.floor(score));
+  displayHighScores();
+
+  overlay.style.display = 'flex';
+
+  setTimeout(() => {
+    overlay.style.display = 'none';
+
+    // Очищаем экран (делаем его чёрным)
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Останавливаем игру окончательно
+    running = false;
+    }, 4000);
+
+}
+
+function getHighScores() {
+  const scores = localStorage.getItem('colorCannonHighScores');
+  if (scores) {
+      return JSON.parse(scores);
+  }
+  return [];
+}
+
+function saveHighScore(newScore) {
+  let scores = getHighScores();
+  scores.push(newScore);
+  scores.sort((a, b) => b - a);
+  scores = scores.slice(0, 5);
+  localStorage.setItem('colorCannonHighScores', JSON.stringify(scores));
+}
+
+function displayHighScores() {
+  const scores = getHighScores();
+  highScoresList.innerHTML = '';
+  if (scores.length === 0) {
+      highScoresList.innerHTML = '<li>Пока нет рекордов</li>';
+      return;
+  }
+  scores.forEach((score) => {
+      highScoresList.innerHTML += `<li>${score}</li>`;
+  });
+}
+
+function showStartOverlay() {
+  startOverlay.classList.add('visible');
+  setTimeout(() => {
+      startOverlay.classList.remove('visible');
+  }, 2000);
+}
+</script>
+
+</body>
+</html>
