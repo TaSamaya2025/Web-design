@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard NASA NEO</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- THREE.js + Globe.gl -->
+  <script src="https://unpkg.com/three@0.155.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl"></script>
+
+  <style>
+:root {
+  --bg: #050714;
+  --card: #0a0e1e;
+  --accent: #2dd4bf;
+  --text: #e6eef6;
+  --muted: #9aa6b2;
+}
+body {
+  margin: 0;
+  font-family: "Orbitron", system-ui, sans-serif;
+  background: radial-gradient(circle at 50% 20%, #0a1530 0%, #050714 80%);
+  color: var(--text);
+  min-height: 100vh;
+}
+.container {
+  max-width: 1600px;
+  margin: 18px auto;
+  padding: 12px;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr 420px;
+  align-items: start;
+}
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+.wide {
+  grid-column: 1 / -1;
+  width: 100%;
+  overflow: hidden;
+}
+h2, h3, h4 {
+  margin-top: 0;
+  color: var(--accent);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+canvas {
+  height: 260px !important;
+  display: block;
+}
+.CC {
+  height: 260px !important;
+  display: block;
+}
+.small-chart {
+  height: 140px !important;
+}
+#globeViz {
+  width: 100%;
+  height: 600px;
+  overflow: hidden;
+}
+
+#globeViz canvas {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+.legend {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 80px;
+}
+.legend2 {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 8px;
+}
+.stat {
+  font-size: 20px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.chart-center-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.orbit-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.orbit-card {
+  height: 600px;  
+  display: flex;
+  flex-direction: column;
+}
+
+.side-column {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
+}
+
+.side-column .card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+
+@media (max-width: 980px) {
+  .container { grid-template-columns: 1fr; }
+}
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="card">
+    <h3>🪐 Астероиды рядом с Землёй (по дням)</h3>
+    <canvas id="lineChart"></canvas>
+    <div class="legend">Количество обнаруженных астероидов за последние дни</div>
+  </div>
+
+  <div class="card">
+    <h3>⚖️ Размер астероидов</h3>
+    <canvas id="sizeChart" class="small-chart"></canvas>
+    <div class="legend" id="device-legend">Малые, средние и крупные объекты</div>
+  </div>
+
+<div class="orbit-row">
+
+  <!-- ЛЕВАЯ ЧАСТЬ — ГЛОБУС -->
+  <div class="card orbit-card">
+    <h3>🌍 Орбиты астероидов (символическое расположение)</h3>
+    <div id="globeViz"></div>
+  </div>
+
+  <!-- ПРАВАЯ КОЛОНКА -->
+  <div class="side-column">
+    <div class="card">
+      <h3>☢️ Потенциально опасные астероиды</h3>
+      <canvas id="hazardChart" class="small-chart"></canvas>
+      <div class="legend2" id="hazard-legend"></div>
+    </div>
+
+    <div class="card">
+      <h3>🏆 Топ-5 крупнейших астероидов</h3>
+      <div id="top-countries" class="legend"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const API_URL = "https://api.nasa.gov/neo/rest/v1/feed?api_key=DEMO_KEY";
+let globe;
+
+/* ---------------- Chart.js ---------------- */
+const lineCtx = document.getElementById('lineChart').getContext('2d');
+const lineChart = new Chart(lineCtx, {
+  type:'line', data:{labels:[],datasets:[{data:[],borderColor:'rgba(45,212,191,0.9)',backgroundColor:createGradient(lineCtx),fill:true,tension:0.25}]},
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9aa6b2'}},y:{ticks:{color:'#9aa6b2'}}}}
+});
+function createGradient(ctx){
+  const g = ctx.createLinearGradient(0,0,0,300);
+  g.addColorStop(0,'rgba(45,212,191,0.18)');
+  g.addColorStop(1,'rgba(45,212,191,0.02)');
+  return g;
+}
+const sizeCtx = document.getElementById('sizeChart').getContext('2d');
+const sizeChart = new Chart(sizeCtx, {
+  type: 'bar',
+  data: {
+    labels: ['Малые (<100м)', 'Средние (100–500м)', 'Крупные (>500м)'],
+    datasets: [{
+      data: [0, 0, 0],
+      backgroundColor: ['#22c55e', '#3b82f6', '#a855f7'],
+      borderRadius: 8,
+      hoverBackgroundColor: ['#4ade80', '#60a5fa', '#c084fc'],
+      barPercentage: 0.5
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: 'rgba(15, 15, 30, 0.9)',
+        titleColor: '#fff',
+        bodyColor: '#9aa6b2',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)'
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: '#9aa6b2', font: { size: 12 } },
+        grid: { display: false }
+      },
+      y: {
+        ticks: { color: '#9aa6b2', font: { size: 12 } },
+        grid: { color: 'rgba(255,255,255,0.05)' }
+      }
+    },
+    animation: {
+      duration: 1000,
+      easing: 'easeOutQuart'
+    }
+  }
+});
+
+// Новый бар-чарт вместо radarChart
+const hazardCtx = document.getElementById('hazardChart').getContext('2d');
+const hazardChart = new Chart(hazardCtx, {
+  type: 'doughnut',
+  data: {
+    labels: ['Безопасные', 'Опасные'],
+    datasets: [{
+      data: [0, 0],
+      backgroundColor: ['#2563eb', '#ef4444'],
+      hoverBackgroundColor: ['#3b82f6', '#f87171'],
+      borderWidth: 0,
+      cutout: '70%'
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        labels: {
+          color: '#9aa6b2',
+          font: { size: 13 }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(10, 15, 35, 0.9)',
+        titleColor: '#fff',
+        bodyColor: '#9aa6b2',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.1)'
+      }
+    }
+  }
+});
+
+/* ---------------- Load NASA data ---------------- */
+async function loadAndRender(){
+  try{
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    const neos = Object.values(data.near_earth_objects).flat();
+
+    const dates = Object.keys(data.near_earth_objects);
+    const counts = dates.map(d=>data.near_earth_objects[d].length);
+    lineChart.data.labels = dates.map(d=>new Date(d).toLocaleDateString());
+    lineChart.data.datasets[0].data = counts;
+    lineChart.update();
+
+   const small = neos.filter(n => n.estimated_diameter.meters.estimated_diameter_max < 100).length;
+  const medium = neos.filter(n => n.estimated_diameter.meters.estimated_diameter_max >= 100 && n.estimated_diameter.meters.estimated_diameter_max < 500).length;
+  const large = neos.filter(n => n.estimated_diameter.meters.estimated_diameter_max >= 500).length;
+
+  sizeChart.data.datasets[0].data = [small, medium, large];
+  sizeChart.update();
+
+  document.getElementById('device-legend').innerHTML = `
+    Малые (<100м): <strong style="color:#22c55e">${small}</strong><br>
+    Средние (100–500м): <strong style="color:#3b82f6">${medium}</strong><br>
+    Крупные (>500м): <strong style="color:#a855f7">${large}</strong>
+  `;
+
+
+    const top5 = neos.sort((a,b)=>b.estimated_diameter.meters.estimated_diameter_max-a.estimated_diameter.meters.estimated_diameter_max).slice(0,5);
+    document.getElementById('top-countries').innerHTML = top5.map((n,i)=>`${i+1}. ${n.name} — <strong style="color:var(--accent)">${Math.round(n.estimated_diameter.meters.estimated_diameter_max)} м</strong>`).join('<br>');
+
+    const dangerous = neos.filter(n => n.is_potentially_hazardous_asteroid).length;
+    const safe = neos.length - dangerous;
+
+    hazardChart.data.datasets[0].data = [safe, dangerous];
+    hazardChart.update();
+
+    document.getElementById('hazard-legend').innerHTML =
+      `Всего объектов: <strong style="color:var(--accent)">${neos.length}</strong><br>
+      Опасные: <strong style="color:#ef4444">${dangerous}</strong><br>
+      Безопасные: <strong style="color:#3b82f6">${safe}</strong>`;
+
+    const asteroids = neos.slice(0,80).map((n,i)=>({
+      id:i,
+      name:n.name,
+      size:n.estimated_diameter.meters.estimated_diameter_max,
+      hazardous:n.is_potentially_hazardous_asteroid,
+      orbitRadius:1.2+Math.random()*0.8,
+      speed:0.001+Math.random()*0.0008,
+      angle:Math.random()*Math.PI*2
+    }));
+
+    renderGlobe(asteroids);
+
+  }catch(e){console.error(e);}
+}
+
+/* ---------------- Globe ---------------- */
+function renderGlobe(asteroids) {
+  const container = document.getElementById('globeViz');
+
+  // ⛔ НЕ пересоздаём Globe каждый раз
+  if (!globe) {
+    globe = Globe()(container)
+      .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+      .bumpImageUrl('https://unpkg.com/three-globe/example/img/earth-topology.png')
+      .backgroundColor('rgba(0,0,0,0)')
+      .showAtmosphere(true)
+      .atmosphereColor('#2dd4bf')
+      .atmosphereAltitude(0.25);
+
+    const scene = globe.scene();
+    scene.add(new THREE.AmbientLight(0xffffff,1.2));
+    const dirLight = new THREE.DirectionalLight(0xffffff,0.8);
+    dirLight.position.set(2,1,1);
+    scene.add(dirLight);
+
+    globe.controls().autoRotate = true;
+    globe.controls().autoRotateSpeed = 0.5;
+    globe.pointOfView({ altitude: 2.8 });
+  }
+
+  // 🔒 ЖЁСТКО фиксируем размеры
+  globe.width(container.clientWidth);
+  globe.height(container.clientHeight);
+
+  // -------- астероиды --------
+  const scene = globe.scene();
+  const asteroidGroup = new THREE.Group();
+  scene.add(asteroidGroup);
+
+  const asteroidMeshes = asteroids.map(a => {
+    const radius = 0.015 + Math.log10(a.size + 10) / 40;
+    const mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(radius, 12, 12),
+      new THREE.MeshStandardMaterial({
+        color: a.hazardous ? 0xff4b4b : 0x2dd4bf,
+        emissive: a.hazardous ? 0x551111 : 0x112222,
+        emissiveIntensity: 0.4,
+        roughness: 0.4,
+        metalness: 0.2
+      })
+    );
+    asteroidGroup.add(mesh);
+    return { ...a, mesh };
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    asteroidMeshes.forEach(a => {
+      a.angle += a.speed;
+      const r = a.orbitRadius;
+      const tilt = Math.sin(a.id) * 0.3;
+      a.mesh.position.set(
+        Math.cos(a.angle) * r,
+        Math.sin(a.angle * 1.3) * tilt,
+        Math.sin(a.angle) * r
+      );
+    });
+  }
+  animate();
+}
+
+/* ---------------- Init ---------------- */
+loadAndRender();
+setInterval(loadAndRender,60000);
+</script>
+</body>
+</html>
